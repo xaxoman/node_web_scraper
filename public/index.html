@@ -5,12 +5,53 @@
     <link rel="stylesheet" type="text/css" href="style.css">
     <link rel="icon" href="favicon.ico" type="image/x-icon">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>Web Screenshot Tool</title>
 </head>
 <body>
-    <p>Hello World!</p>
+    <div class="container">
+        <header>
+            <h1>Web Screenshot Tool</h1>
+            <p class="subtitle">Enter a URL to capture a full-page screenshot</p>
+        </header>
 
-
-     <script src="../index.js"></script>
+        <main>
+            <div class="form-container">
+                <form id="screenshot-form">
+                    <div class="input-group">
+                        <input 
+                            type="text" 
+                            id="url-input" 
+                            placeholder="Enter website URL (e.g., google.com)" 
+                            required
+                        >
+                        <button type="submit" id="submit-btn">Take Screenshot</button>
+                    </div>
+                </form>
+            </div>
+            
+            <div id="loading" class="hidden">
+                <div class="spinner"></div>
+                <p>Taking screenshot, please wait...</p>
+            </div>
+            
+            <div id="error-message" class="hidden"></div>
+            
+            <div id="result" class="hidden">
+                <div class="result-header">
+                    <h2>Screenshot Preview</h2>
+                    <button id="download-btn" class="download-btn">Download Screenshot</button>
+                </div>
+                <div class="screenshot-container">
+                    <img id="screenshot-preview" alt="Website Screenshot">
+                </div>
+            </div>
+        </main>
+        
+        <footer>
+            <p>Note: This tool works best for publicly accessible websites.</p>
+        </footer>
+    </div>
+    
+    <script src="script.js"></script>
 </body>
 </html>
