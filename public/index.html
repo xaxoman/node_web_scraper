@@ -5,53 +5,55 @@
     <link rel="stylesheet" type="text/css" href="style.css">
     <link rel="icon" href="favicon.ico" type="image/x-icon">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Web Screenshot Tool</title>
+    <title>Web Scraper Tool</title>
 </head>
 <body>
     <div class="container">
-        <header>
-            <h1>Web Screenshot Tool</h1>
-            <p class="subtitle">Enter a URL to capture a full-page screenshot</p>
-        </header>
-
-        <main>
-            <div class="form-container">
-                <form id="screenshot-form">
-                    <div class="input-group">
-                        <input 
-                            type="text" 
-                            id="url-input" 
-                            placeholder="Enter website URL (e.g., google.com)" 
-                            required
-                        >
-                        <button type="submit" id="submit-btn">Take Screenshot</button>
-                    </div>
-                </form>
-            </div>
-            
-            <div id="loading" class="hidden">
-                <div class="spinner"></div>
-                <p>Taking screenshot, please wait...</p>
-            </div>
-            
-            <div id="error-message" class="hidden"></div>
-            
-            <div id="result" class="hidden">
-                <div class="result-header">
-                    <h2>Screenshot Preview</h2>
-                    <button id="download-btn" class="download-btn">Download Screenshot</button>
-                </div>
-                <div class="screenshot-container">
-                    <img id="screenshot-preview" alt="Website Screenshot">
-                </div>
-            </div>
-        </main>
+        <h1>Web Scraper Tool</h1>
+        <p>Enter a URL to scrape information from any website:</p>
         
-        <footer>
-            <p>Note: This tool works best for publicly accessible websites.</p>
-        </footer>
+        <div class="form-container">
+            <form id="scrape-form">
+                <input type="url" id="url-input" placeholder="https://example.com" required>
+                <button type="submit">Scrape Website</button>
+            </form>
+        </div>
+        
+        <div id="loading" style="display: none;">
+            <p>Scraping website... Please wait.</p>
+            <div class="spinner"></div>
+        </div>
+        
+        <div id="error" class="error" style="display: none;"></div>
+        
+        <div id="results" style="display: none;">
+            <div class="result-card">
+                <h2 id="page-title"></h2>
+                
+                <div class="section screenshot-section">
+                    <h3>Page Screenshot:</h3>
+                    <div class="screenshot-container">
+                        <img id="screenshot" src="" alt="Page Screenshot">
+                        <div class="screenshot-buttons">
+                            <a id="view-screenshot" href="#" target="_blank" class="button">View Full Screenshot</a>
+                            <a id="download-screenshot" href="#" download class="button">Download</a>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="section">
+                    <h3>Page Content Preview:</h3>
+                    <p id="content-preview"></p>
+                </div>
+                
+                <div class="section">
+                    <h3 id="links-count"></h3>
+                    <ul id="links-list" class="links-list"></ul>
+                </div>
+            </div>
+        </div>
     </div>
-    
-    <script src="script.js"></script>
+
+    <script src="client.js"></script>
 </body>
 </html>

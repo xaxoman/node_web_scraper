@@ -2,89 +2,98 @@ const express = require('express');
 const app = express();
 const puppeteer = require('puppeteer');
 const path = require('path');
+const fs = require('fs');
 
-// Serve static files
+// Create screenshots directory if it doesn't exist
+const screenshotsDir = path.join(__dirname, 'public', 'screenshots');
+if (!fs.existsSync(screenshotsDir)) {
+  fs.mkdirSync(screenshotsDir, { recursive: true });
+}
+
+// Serve static files from the 'public' directory
 app.use(express.static('public'));
+
+// Parse JSON request bodies
 app.use(express.json());
 
-// API endpoint to take screenshot
-app.post('/api/screenshot', async (req, res) => {
+// Example function that uses Puppeteer directly
+async function scrapeWebsite(url) {
+  console.log(`Starting to scrape ${url}...`);
+  
+  // Generate a unique filename for the screenshot based on timestamp and URL
+  const timestamp = Date.now();
+  const urlSlug = url.replace(/[^a-zA-Z0-9]/g, '_').substring(0, 30);
+  const screenshotFilename = `${timestamp}_${urlSlug}.png`;
+  const screenshotPath = path.join(screenshotsDir, screenshotFilename);
+  const screenshotRelativePath = `/screenshots/${screenshotFilename}`;
+  
+  // Specify the path to your Chrome executable
+  const browser = await puppeteer.launch({
+    executablePath: 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
+    headless: "new" // Use new headless mode
+  });
+  
+  const page = await browser.newPage();
+  await page.goto(url);
+  
+  // Example: Get the title of the page
+  const title = await page.title();
+  console.log(`Page title: ${title}`);
+  
+  // Example: Get all links on the page
+  const links = await page.evaluate(() => {
+    return Array.from(document.querySelectorAll('a')).map(a => {
+      return {
+        text: a.innerText.trim(),
+        href: a.href
+      };
+    }).filter(link => link.text !== '');
+  });
+  
+  console.log(`Found ${links.length} links`);
+  
+  // Get page content
+  const content = await page.evaluate(() => {
+    return document.body.innerText.substring(0, 1000); // First 1000 chars
+  });
+  
+  // Take a full page screenshot
+  await page.screenshot({ 
+    path: screenshotPath,
+    fullPage: true 
+  });
+  console.log(`Screenshot saved to ${screenshotPath}`);
+  
+  await browser.close();
+  console.log('Browser closed');
+  
+  return { 
+    title, 
+    links, 
+    content,
+    screenshot: screenshotRelativePath
+  };
+}
+
+// API endpoint to handle scraping requests
+app.post('/api/scrape', async (req, res) => {
+  try {
     const { url } = req.body;
     
     if (!url) {
-        return res.status(400).json({ error: 'URL is required' });
+      return res.status(400).json({ error: 'URL is required' });
     }
     
-    try {
-        // Ensure URL has proper protocol
-        let targetUrl = url;
-        if (!targetUrl.startsWith('http://') && !targetUrl.startsWith('https://')) {
-            targetUrl = 'https://' + targetUrl;
-        }
-        
-        console.log(`Taking screenshot of: ${targetUrl}`);
-        
-        // Get screenshot as base64 string
-        const screenshotBase64 = await takeScreenshot(targetUrl);
-        
-        // Return the base64 data to the client
-        res.json({ 
-            success: true, 
-            screenshot: screenshotBase64,
-            url: targetUrl
-        });
-    } catch (error) {
-        console.error('Error taking screenshot:', error);
-        res.status(500).json({ 
-            error: 'Failed to take screenshot', 
-            details: error.message
-        });
-    }
+    const result = await scrapeWebsite(url);
+    res.json(result);
+  } catch (error) {
+    console.error('Error during scraping:', error);
+    res.status(500).json({ error: 'Failed to scrape the website', details: error.message });
+  }
 });
 
-async function takeScreenshot(url) {
-    let browser = null;
-    try {
-        // Launch browser - use bundled Chromium for Vercel compatibility
-        browser = await puppeteer.launch({
-            // Omit executablePath for serverless environments
-            headless: true,
-            args: ['--no-sandbox', '--disable-setuid-sandbox']
-        });
-        
-        const page = await browser.newPage();
-        
-        // Set viewport size
-        await page.setViewport({
-            width: 1280,
-            height: 800,
-            deviceScaleFactor: 1,
-        });
-        
-        // Navigate to URL with timeout and wait for network idle
-        await page.goto(url, { 
-            waitUntil: 'networkidle2',
-            timeout: 30000
-        });
-        
-        // Take screenshot and return as base64
-        const screenshot = await page.screenshot({ 
-            fullPage: true,
-            encoding: 'base64'
-        });
-        
-        return screenshot;
-    } finally {
-        if (browser) await browser.close();
-    }
-}
-
-// Start the server (not needed for Vercel, but useful for local development)
-const PORT = process.env.PORT || 3000;
+// Start the server
+const PORT = 3000;
 app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
+  console.log(`Server running on http://localhost:${PORT}`);
 });
-
-// Export for serverless
-module.exports = app;
-
