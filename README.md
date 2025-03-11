@@ -4,14 +4,9 @@ A web-based application that allows users to scrape information from any website
 
 ## Demo
 
-https://user-images.githubusercontent.com/yourusername/assets/demo.mp4
+[![Web Scraper Tool Demo](https://img.shields.io/badge/Watch%20Demo-Video-red?style=for-the-badge&logo=youtube)](https://user-images.githubusercontent.com/yourusername/assets/demo.mp4)
 
-<video width="100%" controls>
-    <source src="" type="video/mp4">
-    Your browser does not support the video tag.
-</video>
 
-Watch the video above to see the Web Scraper Tool in action.
 
 ## Features
 
