@@ -1,0 +1,29 @@
+{
+    "version": 2,
+    "builds": [
+      {
+        "src": "index.js",
+        "use": "@vercel/node",
+        "config": {
+          "includeFiles": ["public/**"]
+        }
+      }
+    ],
+    "routes": [
+      {
+        "src": "/api/(.*)",
+        "dest": "index.js"
+      },
+      {
+        "src": "/screenshots/(.*)",
+        "dest": "public/screenshots/$1"
+      },
+      {
+        "src": "/(.*)",
+        "dest": "public/$1"
+      }
+    ],
+    "env": {
+      "NODE_ENV": "production"
+    }
+  }

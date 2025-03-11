@@ -1,121 +1,123 @@
-document.addEventListener('DOMContentLoaded', function() {
-    const form = document.getElementById('scrape-form');
+document.addEventListener('DOMContentLoaded', () => {
+    const scrapeForm = document.getElementById('scrape-form');
     const urlInput = document.getElementById('url-input');
-    const loading = document.getElementById('loading');
-    const results = document.getElementById('results');
-    const error = document.getElementById('error');
+    const loadingElement = document.getElementById('loading');
+    const errorElement = document.getElementById('error');
+    const resultsElement = document.getElementById('results');
     
     // Elements for displaying results
-    const pageTitle = document.getElementById('page-title');
-    const contentPreview = document.getElementById('content-preview');
-    const linksCount = document.getElementById('links-count');
-    const linksList = document.getElementById('links-list');
-    const screenshot = document.getElementById('screenshot');
-    const viewScreenshot = document.getElementById('view-screenshot');
-    const downloadScreenshot = document.getElementById('download-screenshot');
+    const pageTitleElement = document.getElementById('page-title');
+    const screenshotElement = document.getElementById('screenshot');
+    const viewScreenshotLink = document.getElementById('view-screenshot');
+    const downloadScreenshotLink = document.getElementById('download-screenshot');
+    const contentPreviewElement = document.getElementById('content-preview');
+    const linksCountElement = document.getElementById('links-count');
+    const linksListElement = document.getElementById('links-list');
     
-    form.addEventListener('submit', async function(e) {
+    scrapeForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         
-        // Get the URL
+        // Get the URL from input
         const url = urlInput.value.trim();
+        
+        // Validate URL
         if (!url) {
-            showError('Please enter a valid URL');
+            showError('Please enter a valid URL.');
             return;
         }
         
-        // Reset UI
-        hideResults();
-        hideError();
-        showLoading();
+        // Show loading, hide other elements
+        loadingElement.style.display = 'block';
+        errorElement.style.display = 'none';
+        resultsElement.style.display = 'none';
         
         try {
-            // Send request to scrape the URL
+            // Make API request to scrape the website
             const response = await fetch('/api/scrape', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ url })
+                body: JSON.stringify({ url }),
             });
             
-            // Check if the request was successful
+            // Check if the response is successful
             if (!response.ok) {
                 const errorData = await response.json();
                 throw new Error(errorData.error || 'Failed to scrape the website');
             }
             
-            // Parse response
+            // Get the result data
             const data = await response.json();
             
             // Display the results
-            pageTitle.textContent = data.title;
-            contentPreview.textContent = data.content || 'No content found.';
-            linksCount.textContent = `Links Found (${data.links.length}):`;
+            displayResults(data, url);
             
-            // Set up screenshot
-            if (data.screenshot) {
-                screenshot.src = data.screenshot;
-                viewScreenshot.href = data.screenshot;
-                downloadScreenshot.href = data.screenshot;
-                
-                // Extract filename for download attribute
-                const filename = data.screenshot.split('/').pop();
-                downloadScreenshot.setAttribute('download', filename);
-            }
+            // Hide loading, show results
+            loadingElement.style.display = 'none';
+            resultsElement.style.display = 'block';
             
-            // Display links
-            linksList.innerHTML = '';
-            const maxLinks = Math.min(data.links.length, 15); // Show max 15 links
+        } catch (error) {
+            // Handle errors
+            loadingElement.style.display = 'none';
+            showError(error.message || 'An unexpected error occurred.');
+        }
+    });
+    
+    function showError(message) {
+        errorElement.textContent = message;
+        errorElement.style.display = 'block';
+    }
+    
+    function displayResults(data, originalUrl) {
+        // Set page title
+        pageTitleElement.textContent = data.title || 'Untitled Page';
+        
+        // Set screenshot
+        screenshotElement.src = data.screenshot;
+        viewScreenshotLink.href = data.screenshot;
+        downloadScreenshotLink.href = data.screenshot;
+        
+        // Set filename for download
+        const domain = new URL(originalUrl).hostname;
+        downloadScreenshotLink.download = `screenshot-${domain}.png`;
+        
+        // Set content preview
+        contentPreviewElement.textContent = data.content || 'No content available';
+        
+        // Set links count
+        const linkCount = data.links?.length || 0;
+        linksCountElement.textContent = `Links Found (${linkCount}):`;
+        
+        // Clear previous links
+        linksListElement.innerHTML = '';
+        
+        // Add links to the list
+        if (data.links && data.links.length > 0) {
+            // Only display first 20 links to avoid overwhelming the UI
+            const displayLinks = data.links.slice(0, 20);
             
-            for (let i = 0; i < maxLinks; i++) {
-                const link = data.links[i];
+            displayLinks.forEach(link => {
                 const li = document.createElement('li');
                 const a = document.createElement('a');
                 a.href = link.href;
                 a.textContent = link.text || link.href;
                 a.target = '_blank';
+                a.rel = 'noopener noreferrer';
                 li.appendChild(a);
-                linksList.appendChild(li);
-            }
+                linksListElement.appendChild(li);
+            });
             
-            if (data.links.length > maxLinks) {
+            // Add message if there are more links
+            if (data.links.length > 20) {
                 const li = document.createElement('li');
-                li.textContent = `... and ${data.links.length - maxLinks} more`;
-                linksList.appendChild(li);
+                li.textContent = `... and ${data.links.length - 20} more links`;
+                linksListElement.appendChild(li);
             }
-            
-            showResults();
-            
-        } catch (error) {
-            showError(error.message);
-        } finally {
-            hideLoading();
+        } else {
+            const li = document.createElement('li');
+            li.textContent = 'No links found on page';
+            linksListElement.appendChild(li);
         }
-    });
-    
-    function showLoading() {
-        loading.style.display = 'block';
-    }
-    
-    function hideLoading() {
-        loading.style.display = 'none';
-    }
-    
-    function showResults() {
-        results.style.display = 'block';
-    }
-    
-    function hideResults() {
-        results.style.display = 'none';
-    }
-    
-    function showError(message) {
-        error.textContent = `Error: ${message}`;
-        error.style.display = 'block';
-    }
-    
-    function hideError() {
-        error.style.display = 'none';
     }
 });
